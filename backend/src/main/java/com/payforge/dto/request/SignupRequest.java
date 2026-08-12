@@ -1,8 +1,10 @@
 package com.payforge.dto.request;
 
+import com.payforge.entity.Role;
 import jakarta.persistence.Column;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -21,6 +23,6 @@ public class SignupRequest{
     @NotBlank(message = "Password is required")
     private String password;
 
-    @NotBlank(message = "Role is required")
-    private String Role;
+    @NotNull
+    private Role Role;
 }
