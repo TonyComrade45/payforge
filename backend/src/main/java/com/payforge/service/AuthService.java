@@ -1,5 +1,6 @@
 package com.payforge.service;
 
+import com.payforge.dto.request.LoginRequest;
 import com.payforge.dto.request.SignupRequest;
 import com.payforge.dto.response.AuthResponse;
 import com.payforge.entity.User;
@@ -37,6 +38,16 @@ public class AuthService {
                 savedUser.getId(),
                 savedUser.getEmail()
         );
+    }
+    public AuthResponse login(LoginRequest request){
+        User user=userRepository.findByEmail(request.getEmail())
+                .orElseThrow(()->new RuntimeException("Email or Password Invalid"));
+
+        boolean passwordmatches=passwordEncoder.matches(request.getPassword(),user.getPassword());
+        if(!passwordmatches){
+            throw  new RuntimeException("Invalid Password or Email");
+        }
+        return  new AuthResponse("Login Successful", user.getId(), user.getEmail());
     }
 
 }

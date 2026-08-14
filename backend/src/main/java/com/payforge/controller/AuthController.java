@@ -1,5 +1,6 @@
 package com.payforge.controller;
 
+import com.payforge.dto.request.LoginRequest;
 import com.payforge.dto.request.SignupRequest;
 import com.payforge.dto.response.AuthResponse;
 import com.payforge.service.AuthService;
@@ -23,5 +24,10 @@ public class AuthController {
     public ResponseEntity<AuthResponse> signup(@Valid @RequestBody SignupRequest request){
         AuthResponse response=authService.signup(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
+    }
+    @PostMapping("/login")
+    public  ResponseEntity<AuthResponse> login(@RequestBody LoginRequest request){
+        AuthResponse response=authService.login(request);
+        return  ResponseEntity.status(HttpStatus.ACCEPTED).body(response);
     }
 }
