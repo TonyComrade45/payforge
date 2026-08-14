@@ -4,7 +4,9 @@
 /home/apiiit123/BackendProject/payforge/backend/src/main/java/com/payforge/dto/request/LoginRequest.java
 /home/apiiit123/BackendProject/payforge/backend/src/main/java/com/payforge/dto/request/SignupRequest.java
 /home/apiiit123/BackendProject/payforge/backend/src/main/java/com/payforge/dto/response/AuthResponse.java
+/home/apiiit123/BackendProject/payforge/backend/src/main/java/com/payforge/entity/Role.java
 /home/apiiit123/BackendProject/payforge/backend/src/main/java/com/payforge/entity/User.java
 /home/apiiit123/BackendProject/payforge/backend/src/main/java/com/payforge/exception/GlobalExceptionHandler.java
 /home/apiiit123/BackendProject/payforge/backend/src/main/java/com/payforge/repository/UserRepository.java
+/home/apiiit123/BackendProject/payforge/backend/src/main/java/com/payforge/security/JwtService.java
 /home/apiiit123/BackendProject/payforge/backend/src/main/java/com/payforge/service/AuthService.java
