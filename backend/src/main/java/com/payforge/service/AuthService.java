@@ -5,23 +5,30 @@ import com.payforge.dto.request.SignupRequest;
 import com.payforge.dto.response.AuthResponse;
 import com.payforge.dto.response.SignupResponse;
 import com.payforge.entity.User;
+import com.payforge.entity.Wallet;
 import com.payforge.repository.UserRepository;
+import com.payforge.repository.WalletRepository;
 import com.payforge.security.JwtService;
 import org.springframework.context.annotation.Bean;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import com.payforge.security.JwtService;
+
+import java.math.BigDecimal;
+
 @Service
 public class AuthService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
+    private final WalletRepository walletRepository;
 
     public AuthService(UserRepository userRepository, PasswordEncoder passwordEncoder,
-                       JwtService jwtService) {
+                       JwtService jwtService, WalletRepository walletRepository) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.jwtService=jwtService;
+        this.walletRepository = walletRepository;
     }
     public SignupResponse signup(SignupRequest request){
         if(userRepository.existsByEmail(request.getEmail())){
@@ -37,7 +44,14 @@ public class AuthService {
         );
         // 5. Save user to database
         User savedUser = userRepository.save(user);
+        //Wallet creation
+        Wallet wallet=new Wallet();
+        wallet.setUser(savedUser);
+        wallet.setBalance(BigDecimal.ZERO);
+        wallet.setCurrency("INR");
+        wallet.setActive(true);
 
+        walletRepository.save(wallet);
         // 6. Return response
         return new SignupResponse(
                 "User registered successfully",
