@@ -1,6 +1,7 @@
 package com.payforge.service;
 
 import com.payforge.dto.response.WalletResponse;
+import com.payforge.entity.User;
 import com.payforge.entity.Wallet;
 import com.payforge.repository.WalletRepository;
 import org.springframework.stereotype.Service;
@@ -14,9 +15,9 @@ public class WalletService {
         this.walletRepository = walletRepository;
     }
 
-    public WalletResponse getWallet(Long userId) {
+    public WalletResponse getWallet(User user) {
 
-        Wallet wallet = walletRepository.findByUserId(userId)
+        Wallet wallet = walletRepository.findByUser(user)
                 .orElseThrow(() -> new RuntimeException("Wallet not found"));
 
         return new WalletResponse(
