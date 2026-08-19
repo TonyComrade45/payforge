@@ -1,6 +1,7 @@
 package com.payforge.controller;
 
 import com.payforge.dto.request.DepositRequest;
+import com.payforge.dto.request.WithdrawRequest;
 import com.payforge.dto.response.WalletResponse;
 import com.payforge.entity.User;
 import com.payforge.entity.Wallet;
@@ -38,33 +39,26 @@ public class WalletController {
     @PostMapping("/deposit")
     public ResponseEntity<WalletResponse> deposit(
             @RequestBody DepositRequest request,
-            Authentication authentication) {
+            @AuthenticationPrincipal User user) {
 
-        User user = (User) authentication.getPrincipal();
+        WalletResponse response =
+                walletService.deposit(
+                        user.getId(),
+                        request.getAmount()
+                );
 
-        Wallet wallet = walletRepository.findByUser(user)
-                .orElseThrow(() ->
-                        new RuntimeException("Wallet not found"));
+        return ResponseEntity.ok(response);
+    }
+    @PostMapping("/withdraw")
+    public ResponseEntity<WalletResponse> withdraw(
+            @RequestBody WithdrawRequest request,
+            @AuthenticationPrincipal User user) {
 
-        if (request.getAmount() == null ||
-                request.getAmount().compareTo(BigDecimal.ZERO) <= 0) {
-
-            throw new RuntimeException(
-                    "Amount must be greater than zero");
-        }
-
-        wallet.setBalance(
-                wallet.getBalance().add(request.getAmount())
-        );
-
-        Wallet savedWallet = walletRepository.save(wallet);
-
-        WalletResponse response = new WalletResponse(
-                savedWallet.getId(),
-                savedWallet.getBalance(),
-                savedWallet.getCurrency(),
-                savedWallet.isActive()
-        );
+        WalletResponse response =
+                walletService.withdraw(
+                        user.getId(),
+                        request.getAmount()
+                );
 
         return ResponseEntity.ok(response);
     }
