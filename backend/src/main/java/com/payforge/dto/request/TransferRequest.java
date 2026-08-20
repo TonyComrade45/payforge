@@ -9,4 +9,5 @@ import java.math.BigDecimal;
 public class TransferRequest {
     private String receiverEmail;
     private BigDecimal amount;
+    
 }
