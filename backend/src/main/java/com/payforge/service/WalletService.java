@@ -1,5 +1,6 @@
 package com.payforge.service;
 
+import com.payforge.dto.response.TransactionResponse;
 import com.payforge.dto.response.WalletResponse;
 import com.payforge.entity.Transaction;
 import com.payforge.entity.TransactionType;
@@ -11,6 +12,7 @@ import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
+import java.util.List;
 
 @Service
 public class WalletService {
@@ -115,6 +117,35 @@ public class WalletService {
                 wallet.getBalance(),
                 wallet.getCurrency(),
                 wallet.isActive()
+        );
+    }
+    public List<TransactionResponse> getTransactions(Long userId) {
+
+        List<Transaction> transactions =
+                transactionRepository
+                        .findByWalletUserIdOrderByCreatedAtDesc(userId);
+
+        return transactions.stream()
+                .map(transaction -> new TransactionResponse(
+                        transaction.getId(),
+                        transaction.getType(),
+                        transaction.getAmount(),
+                        transaction.getCreatedAt()
+                ))
+                .toList();
+    }
+    public TransactionResponse getTransaction(Long transactionId, Long userId) {
+
+        Transaction transaction = transactionRepository
+                .findByIdAndWalletUserId(transactionId, userId)
+                .orElseThrow(() ->
+                        new RuntimeException("Transaction not found"));
+
+        return new TransactionResponse(
+                transaction.getId(),
+                transaction.getType(),
+                transaction.getAmount(),
+                transaction.getCreatedAt()
         );
     }
 }
