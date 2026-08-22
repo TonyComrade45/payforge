@@ -9,10 +9,11 @@ import com.payforge.entity.Wallet;
 import com.payforge.repository.TransactionRepository;
 import com.payforge.repository.WalletRepository;
 import jakarta.transaction.Transactional;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
-import java.util.List;
 
 @Service
 public class WalletService {
@@ -20,15 +21,23 @@ public class WalletService {
     private final WalletRepository walletRepository;
     private final TransactionRepository transactionRepository;
 
-    public WalletService(WalletRepository walletRepository, TransactionRepository transactionRepository) {
+    public WalletService(
+            WalletRepository walletRepository,
+            TransactionRepository transactionRepository) {
+
         this.walletRepository = walletRepository;
         this.transactionRepository = transactionRepository;
     }
 
+    // =========================
+    // GET WALLET
+    // =========================
+
     public WalletResponse getWallet(User user) {
 
         Wallet wallet = walletRepository.findByUser(user)
-                .orElseThrow(() -> new RuntimeException("Wallet not found"));
+                .orElseThrow(() ->
+                        new RuntimeException("Wallet not found"));
 
         return new WalletResponse(
                 wallet.getId(),
@@ -37,6 +46,10 @@ public class WalletService {
                 wallet.isActive()
         );
     }
+
+    // =========================
+    // DEPOSIT
+    // =========================
 
     @Transactional
     public WalletResponse deposit(Long userId, BigDecimal amount) {
@@ -63,6 +76,7 @@ public class WalletService {
         walletRepository.save(wallet);
 
         Transaction transaction = new Transaction();
+
         transaction.setWallet(wallet);
         transaction.setType(TransactionType.DEPOSIT);
         transaction.setAmount(amount);
@@ -76,6 +90,10 @@ public class WalletService {
                 wallet.isActive()
         );
     }
+
+    // =========================
+    // WITHDRAW
+    // =========================
 
     @Transactional
     public WalletResponse withdraw(Long userId, BigDecimal amount) {
@@ -106,6 +124,7 @@ public class WalletService {
         walletRepository.save(wallet);
 
         Transaction transaction = new Transaction();
+
         transaction.setWallet(wallet);
         transaction.setType(TransactionType.WITHDRAW);
         transaction.setAmount(amount);
@@ -119,27 +138,66 @@ public class WalletService {
                 wallet.isActive()
         );
     }
-    public List<TransactionResponse> getTransactions(Long userId) {
 
-        List<Transaction> transactions =
-                transactionRepository
-                        .findByWalletUserIdOrderByCreatedAtDesc(userId);
+    // =========================
+    // TRANSACTION HISTORY
+    // WITH PAGINATION + FILTER
+    // =========================
 
-        return transactions.stream()
-                .map(transaction -> new TransactionResponse(
+    public Page<TransactionResponse> getTransactions(
+            Long userId,
+            TransactionType type,
+            Pageable pageable) {
+
+        Page<Transaction> transactions;
+
+        if (type == null) {
+
+            transactions =
+                    transactionRepository
+                            .findByWalletUserIdOrderByCreatedAtDesc(
+                                    userId,
+                                    pageable
+                            );
+
+        } else {
+
+            transactions =
+                    transactionRepository
+                            .findByWalletUserIdAndTypeOrderByCreatedAtDesc(
+                                    userId,
+                                    type,
+                                    pageable
+                            );
+        }
+
+        return transactions.map(transaction ->
+                new TransactionResponse(
                         transaction.getId(),
                         transaction.getType(),
                         transaction.getAmount(),
                         transaction.getCreatedAt()
-                ))
-                .toList();
+                )
+        );
     }
-    public TransactionResponse getTransaction(Long transactionId, Long userId) {
 
-        Transaction transaction = transactionRepository
-                .findByIdAndWalletUserId(transactionId, userId)
-                .orElseThrow(() ->
-                        new RuntimeException("Transaction not found"));
+    // =========================
+    // SINGLE TRANSACTION
+    // =========================
+
+    public TransactionResponse getTransaction(
+            Long transactionId,
+            Long userId) {
+
+        Transaction transaction =
+                transactionRepository
+                        .findByIdAndWalletUserId(
+                                transactionId,
+                                userId
+                        )
+                        .orElseThrow(() ->
+                                new RuntimeException(
+                                        "Transaction not found"));
 
         return new TransactionResponse(
                 transaction.getId(),

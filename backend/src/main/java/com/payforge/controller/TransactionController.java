@@ -1,13 +1,14 @@
 package com.payforge.controller;
 
 import com.payforge.dto.response.TransactionResponse;
+import com.payforge.entity.TransactionType;
 import com.payforge.entity.User;
 import com.payforge.service.WalletService;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
@@ -22,10 +23,19 @@ public class TransactionController {
     }
 
     @GetMapping
-    public List<TransactionResponse> getTransactions(
-            @AuthenticationPrincipal User user) {
+    public Page<TransactionResponse> getTransactions(
+            @AuthenticationPrincipal User user,
+            @RequestParam(required = false) TransactionType type,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
 
-        return walletService.getTransactions(user.getId());
+        Pageable pageable = PageRequest.of(page, size);
+
+        return walletService.getTransactions(
+                user.getId(),
+                type,
+                pageable
+        );
     }
     @GetMapping("/{id}")
     public TransactionResponse getTransaction(
