@@ -6,6 +6,8 @@ import com.payforge.entity.Transaction;
 import com.payforge.entity.TransactionType;
 import com.payforge.entity.User;
 import com.payforge.entity.Wallet;
+import com.payforge.exception.BadRequestException;
+import com.payforge.exception.ResourceNotFoundException;
 import com.payforge.repository.TransactionRepository;
 import com.payforge.repository.WalletRepository;
 import jakarta.transaction.Transactional;
@@ -37,7 +39,7 @@ public class WalletService {
 
         Wallet wallet = walletRepository.findByUser(user)
                 .orElseThrow(() ->
-                        new RuntimeException("Wallet not found"));
+                        new ResourceNotFoundException("Wallet not found"));
 
         return new WalletResponse(
                 wallet.getId(),
@@ -63,7 +65,8 @@ public class WalletService {
 
         Wallet wallet = walletRepository.findByUserId(userId)
                 .orElseThrow(() ->
-                        new RuntimeException("Wallet not found"));
+                        new ResourceNotFoundException(
+                                "Wallet not found"));
 
         if (!wallet.isActive()) {
             throw new RuntimeException("Wallet is inactive");
@@ -101,20 +104,21 @@ public class WalletService {
         if (amount == null ||
                 amount.compareTo(BigDecimal.ZERO) <= 0) {
 
-            throw new RuntimeException(
+            throw new BadRequestException(
                     "Amount must be greater than zero");
         }
 
         Wallet wallet = walletRepository.findByUserId(userId)
                 .orElseThrow(() ->
-                        new RuntimeException("Wallet not found"));
+                        new ResourceNotFoundException(
+                                "Wallet not found"));
 
         if (!wallet.isActive()) {
-            throw new RuntimeException("Wallet is inactive");
+            throw new BadRequestException("Wallet is inactive");
         }
 
         if (wallet.getBalance().compareTo(amount) < 0) {
-            throw new RuntimeException("Insufficient balance");
+            throw new BadRequestException("Insufficient balance");
         }
 
         wallet.setBalance(
@@ -196,7 +200,7 @@ public class WalletService {
                                 userId
                         )
                         .orElseThrow(() ->
-                                new RuntimeException(
+                                new ResourceNotFoundException(
                                         "Transaction not found"));
 
         return new TransactionResponse(
