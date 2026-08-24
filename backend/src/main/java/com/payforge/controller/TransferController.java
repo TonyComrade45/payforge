@@ -3,6 +3,7 @@ package com.payforge.controller;
 import com.payforge.dto.request.TransferRequest;
 import com.payforge.entity.User;
 import com.payforge.service.TransferService;
+import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
@@ -19,7 +20,7 @@ public class TransferController {
 
     @PostMapping
     public ResponseEntity<String> transfer(
-            @RequestBody TransferRequest request,
+            @Valid  @RequestBody TransferRequest request,
             Authentication authentication) {
 
         User sender = (User) authentication.getPrincipal();

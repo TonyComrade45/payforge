@@ -7,6 +7,7 @@ import com.payforge.entity.User;
 import com.payforge.entity.Wallet;
 import com.payforge.repository.WalletRepository;
 import com.payforge.service.WalletService;
+import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -38,7 +39,7 @@ public class WalletController {
 
     @PostMapping("/deposit")
     public ResponseEntity<WalletResponse> deposit(
-            @RequestBody DepositRequest request,
+             @Valid  @RequestBody DepositRequest request,
             @AuthenticationPrincipal User user) {
 
         WalletResponse response =
@@ -51,7 +52,7 @@ public class WalletController {
     }
     @PostMapping("/withdraw")
     public ResponseEntity<WalletResponse> withdraw(
-            @RequestBody WithdrawRequest request,
+             @Valid @RequestBody WithdrawRequest request,
             @AuthenticationPrincipal User user) {
 
         WalletResponse response =
