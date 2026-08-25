@@ -110,9 +110,7 @@ public class WalletService {
 
         Wallet wallet = walletRepository.findByUserId(userId)
                 .orElseThrow(() ->
-                        new ResourceNotFoundException(
-                                "Wallet not found"));
-
+                        new ResourceNotFoundException("Wallet not found"));
         if (!wallet.isActive()) {
             throw new BadRequestException("Wallet is inactive");
         }
