@@ -1,10 +1,9 @@
 package com.payforge.service;
 
 import com.payforge.dto.request.TransferRequest;
-import com.payforge.entity.Transaction;
-import com.payforge.entity.TransactionType;
-import com.payforge.entity.User;
-import com.payforge.entity.Wallet;
+import com.payforge.entity.*;
+import com.payforge.exception.DuplicateRequestException;
+import com.payforge.repository.IdempotencyRepository;
 import com.payforge.repository.TransactionRepository;
 import com.payforge.repository.UserRepository;
 import com.payforge.repository.WalletRepository;
@@ -19,19 +18,28 @@ public class TransferService {
     private final UserRepository userRepository;
     private final WalletRepository walletRepository;
     private final TransactionRepository transactionRepository;
+    private  final IdempotencyRepository idempotencyRepository;
 
     public TransferService(
             UserRepository userRepository,
             WalletRepository walletRepository,
-            TransactionRepository transactionRepository) {
+            TransactionRepository transactionRepository, IdempotencyRepository idempotencyRepository) {
 
         this.userRepository = userRepository;
         this.walletRepository = walletRepository;
         this.transactionRepository = transactionRepository;
+        this.idempotencyRepository = idempotencyRepository;
     }
 
     @Transactional
     public void transfer(User sender, TransferRequest request) {
+
+        if (idempotencyRepository.existsByIdempotencyKey(
+                request.getIdempotencyKey())) {
+
+            throw new DuplicateRequestException(
+                    "Duplicate transfer request");
+        }
 
         // 1. Validate amount
         if (request.getAmount() == null ||
@@ -149,5 +157,13 @@ public class TransferService {
         // 16. Save transactions
         transactionRepository.save(senderTransaction);
         transactionRepository.save(receiverTransaction);
+
+        IdempotencyRecord record = new IdempotencyRecord();
+
+        record.setIdempotencyKey(
+                request.getIdempotencyKey()
+        );
+
+        idempotencyRepository.save(record);
     }
 }

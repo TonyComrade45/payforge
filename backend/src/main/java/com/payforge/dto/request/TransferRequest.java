@@ -23,4 +23,6 @@ public class TransferRequest {
             message = "Amount must be greater than zero"
     )
     private BigDecimal amount;
+    @NotBlank(message = "Idempotency key is required")
+    private String idempotencyKey;
 }
