@@ -3,6 +3,7 @@ package com.payforge.service;
 import com.payforge.dto.response.TransactionResponse;
 import com.payforge.dto.response.WalletResponse;
 import com.payforge.entity.Transaction;
+import com.payforge.entity.TransactionStatus;
 import com.payforge.entity.TransactionType;
 import com.payforge.entity.User;
 import com.payforge.entity.Wallet;
@@ -16,6 +17,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
+import java.util.UUID;
 
 @Service
 public class WalletService {
@@ -59,7 +61,7 @@ public class WalletService {
         if (amount == null ||
                 amount.compareTo(BigDecimal.ZERO) <= 0) {
 
-            throw new RuntimeException(
+            throw new BadRequestException(
                     "Amount must be greater than zero");
         }
 
@@ -69,7 +71,8 @@ public class WalletService {
                                 "Wallet not found"));
 
         if (!wallet.isActive()) {
-            throw new RuntimeException("Wallet is inactive");
+            throw new BadRequestException(
+                    "Wallet is inactive");
         }
 
         wallet.setBalance(
@@ -83,6 +86,8 @@ public class WalletService {
         transaction.setWallet(wallet);
         transaction.setType(TransactionType.DEPOSIT);
         transaction.setAmount(amount);
+        transaction.setStatus(TransactionStatus.SUCCESS);
+        transaction.setReferenceId(UUID.randomUUID().toString());
 
         transactionRepository.save(transaction);
 
@@ -110,13 +115,17 @@ public class WalletService {
 
         Wallet wallet = walletRepository.findByUserId(userId)
                 .orElseThrow(() ->
-                        new ResourceNotFoundException("Wallet not found"));
+                        new ResourceNotFoundException(
+                                "Wallet not found"));
+
         if (!wallet.isActive()) {
-            throw new BadRequestException("Wallet is inactive");
+            throw new BadRequestException(
+                    "Wallet is inactive");
         }
 
         if (wallet.getBalance().compareTo(amount) < 0) {
-            throw new BadRequestException("Insufficient balance");
+            throw new BadRequestException(
+                    "Insufficient balance");
         }
 
         wallet.setBalance(
@@ -130,6 +139,8 @@ public class WalletService {
         transaction.setWallet(wallet);
         transaction.setType(TransactionType.WITHDRAW);
         transaction.setAmount(amount);
+        transaction.setStatus(TransactionStatus.SUCCESS);
+        transaction.setReferenceId(UUID.randomUUID().toString());
 
         transactionRepository.save(transaction);
 
@@ -143,7 +154,7 @@ public class WalletService {
 
     // =========================
     // TRANSACTION HISTORY
-    // WITH PAGINATION + FILTER
+    // PAGINATION + FILTER
     // =========================
 
     public Page<TransactionResponse> getTransactions(
@@ -176,7 +187,9 @@ public class WalletService {
         return transactions.map(transaction ->
                 new TransactionResponse(
                         transaction.getId(),
+                        transaction.getReferenceId(),
                         transaction.getType(),
+                        transaction.getStatus(),
                         transaction.getAmount(),
                         transaction.getCreatedAt()
                 )
@@ -203,7 +216,9 @@ public class WalletService {
 
         return new TransactionResponse(
                 transaction.getId(),
+                transaction.getReferenceId(),
                 transaction.getType(),
+                transaction.getStatus(),
                 transaction.getAmount(),
                 transaction.getCreatedAt()
         );

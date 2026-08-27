@@ -26,6 +26,13 @@ public class Transaction {
     @Column(nullable = false)
     private TransactionType type;
 
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private TransactionStatus status;
+
+    @Column(nullable = false, unique = true)
+    private String referenceId;
+
     @Column(nullable = false, precision = 19, scale = 2)
     private BigDecimal amount;
 

@@ -11,6 +11,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.util.UUID;
 
 @Service
 public class TransferService {
@@ -146,13 +147,16 @@ public class TransferService {
         senderTransaction.setWallet(senderWallet);
         senderTransaction.setType(TransactionType.TRANSFER);
         senderTransaction.setAmount(request.getAmount());
-
+        senderTransaction.setStatus(TransactionStatus.SUCCESS);
+        senderTransaction.setReferenceId(UUID.randomUUID().toString());
         // 15. Create receiver transaction
         Transaction receiverTransaction = new Transaction();
 
         receiverTransaction.setWallet(receiverWallet);
         receiverTransaction.setType(TransactionType.TRANSFER);
         receiverTransaction.setAmount(request.getAmount());
+        receiverTransaction.setStatus(TransactionStatus.SUCCESS);
+        receiverTransaction.setReferenceId(UUID.randomUUID().toString());
 
         // 16. Save transactions
         transactionRepository.save(senderTransaction);
