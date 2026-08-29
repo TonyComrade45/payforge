@@ -19,6 +19,7 @@ public class SecurityConfig {
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
+
     public SecurityConfig(JwtAuthenticationFilter jwtAuthenticationFilter) {
         this.jwtAuthenticationFilter = jwtAuthenticationFilter;
     }
@@ -40,14 +41,22 @@ public class SecurityConfig {
 
                 // API authorization rules
                 .authorizeHttpRequests(auth -> auth
+
+                        // Public endpoints
                         .requestMatchers(
                                 "/api/auth/signup",
                                 "/api/auth/login"
                         ).permitAll()
+
+                        // Admin-only endpoints
+                        .requestMatchers("/api/admin/**")
+                        .hasRole("ADMIN")
+
+                        // All other endpoints require authentication
                         .anyRequest().authenticated()
                 )
 
-                // Run JWT filter before Spring's username/password filter
+                // JWT authentication
                 .addFilterBefore(
                         jwtAuthenticationFilter,
                         UsernamePasswordAuthenticationFilter.class
