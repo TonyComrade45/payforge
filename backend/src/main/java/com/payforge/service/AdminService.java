@@ -1,8 +1,8 @@
 package com.payforge.service;
 
-import com.payforge.dto.response.AdminStatsResponse;
-import com.payforge.dto.response.AdminUserDetailsResponse;
-import com.payforge.dto.response.AdminUserResponse;
+import com.payforge.dto.response.*;
+import com.payforge.entity.Transaction;
+import com.payforge.entity.TransactionType;
 import com.payforge.entity.User;
 import com.payforge.exception.ResourceNotFoundException;
 import com.payforge.repository.TransactionRepository;
@@ -12,7 +12,6 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import com.payforge.dto.response.AdminUserDetailsResponse;
-import com.payforge.entity.User;
 import com.payforge.entity.Wallet;
 
 @Service
@@ -83,4 +82,62 @@ public class AdminService {
                 transactionCount
         );
     }
+
+    public Page<AdminTransactionResponse> getTransactions(
+            Pageable pageable) {
+
+        Page<Transaction> transactions =
+                transactionRepository
+                        .findAllByOrderByCreatedAtDesc(pageable);
+
+        return transactions.map(transaction ->
+                new AdminTransactionResponse(
+                        transaction.getId(),
+                        transaction.getWallet().getUser().getId(),
+                        transaction.getWallet().getUser().getEmail(),
+                        transaction.getType(),
+                        transaction.getAmount(),
+                        transaction.getStatus(),
+                        transaction.getReferenceId(),
+                        transaction.getCreatedAt()
+                )
+        );
+    }
+
+    public Page<AdminTransactionResponse> getTransactions(
+            TransactionType type,
+            Pageable pageable) {
+
+        Page<Transaction> transactions;
+
+        if (type == null) {
+
+            transactions =
+                    transactionRepository
+                            .findAllByOrderByCreatedAtDesc(pageable);
+
+        } else {
+
+            transactions =
+                    transactionRepository
+                            .findByTypeOrderByCreatedAtDesc(
+                                    type,
+                                    pageable
+                            );
+        }
+
+        return transactions.map(transaction ->
+                new AdminTransactionResponse(
+                        transaction.getId(),
+                        transaction.getWallet().getUser().getId(),
+                        transaction.getWallet().getUser().getEmail(),
+                        transaction.getType(),
+                        transaction.getAmount(),
+                        transaction.getStatus(),
+                        transaction.getReferenceId(),
+                        transaction.getCreatedAt()
+                )
+        );
+    }
+
 }

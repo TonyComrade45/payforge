@@ -37,4 +37,9 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long> 
             Pageable pageable
     );
     long countByWalletUserId(Long userId);
+    Page<Transaction> findAllByOrderByCreatedAtDesc(Pageable pageable);
+    Page<Transaction> findByTypeOrderByCreatedAtDesc(
+            TransactionType type,
+            Pageable pageable
+    );
 }

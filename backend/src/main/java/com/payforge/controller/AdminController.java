@@ -1,8 +1,10 @@
 package com.payforge.controller;
 
 import com.payforge.dto.response.AdminStatsResponse;
+import com.payforge.dto.response.AdminTransactionResponse;
 import com.payforge.dto.response.AdminUserDetailsResponse;
 import com.payforge.dto.response.AdminUserResponse;
+import com.payforge.entity.TransactionType;
 import com.payforge.service.AdminService;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -38,5 +40,19 @@ public class AdminController {
             @PathVariable Long id) {
 
         return adminService.getUserDetails(id);
+    }
+
+    @GetMapping("/transactions")
+    public Page<AdminTransactionResponse> getTransactions(
+            @RequestParam(required = false) TransactionType type,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+
+        Pageable pageable = PageRequest.of(page, size);
+
+        return adminService.getTransactions(
+                type,
+                pageable
+        );
     }
 }
