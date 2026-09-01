@@ -34,6 +34,12 @@ public class TransferService {
 
     @Transactional
     public void transfer(User sender, TransferRequest request) {
+        if (request.getIdempotencyKey() == null ||
+                request.getIdempotencyKey().isBlank()) {
+
+            throw new RuntimeException(
+                    "Idempotency key is required");
+        }
 
         if (idempotencyRepository.existsByIdempotencyKey(
                 request.getIdempotencyKey())) {
