@@ -67,7 +67,7 @@ public class GlobalExceptionHandler {
 
         ErrorResponse response = new ErrorResponse(
                 HttpStatus.BAD_REQUEST.value(),
-                "Invalid request value",
+                exception.getMessage(),
                 LocalDateTime.now()
         );
 

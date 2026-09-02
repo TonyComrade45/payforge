@@ -2,7 +2,9 @@ package com.payforge.service;
 
 import com.payforge.dto.request.TransferRequest;
 import com.payforge.entity.*;
+import com.payforge.exception.BadRequestException;
 import com.payforge.exception.DuplicateRequestException;
+import com.payforge.exception.ResourceNotFoundException;
 import com.payforge.repository.IdempotencyRepository;
 import com.payforge.repository.TransactionRepository;
 import com.payforge.repository.UserRepository;
@@ -37,7 +39,7 @@ public class TransferService {
         if (request.getIdempotencyKey() == null ||
                 request.getIdempotencyKey().isBlank()) {
 
-            throw new RuntimeException(
+            throw new BadRequestException(
                     "Idempotency key is required");
         }
 
@@ -52,7 +54,7 @@ public class TransferService {
         if (request.getAmount() == null ||
                 request.getAmount().compareTo(BigDecimal.ZERO) <= 0) {
 
-            throw new RuntimeException(
+            throw new BadRequestException(
                     "Amount must be greater than zero");
         }
 
@@ -60,11 +62,11 @@ public class TransferService {
         User receiver = userRepository
                 .findByEmail(request.getReceiverEmail())
                 .orElseThrow(() ->
-                        new RuntimeException("Receiver not found"));
+                        new BadRequestException("Receiver not found"));
 
         // 3. Sender cannot transfer to himself
         if (sender.getId().equals(receiver.getId())) {
-            throw new RuntimeException(
+            throw new BadRequestException(
                     "Cannot transfer money to yourself");
         }
 
@@ -72,12 +74,12 @@ public class TransferService {
         Wallet senderWallet = walletRepository
                 .findByUser(sender)
                 .orElseThrow(() ->
-                        new RuntimeException("Sender wallet not found"));
+                        new ResourceNotFoundException("Sender wallet not found"));
 
         Wallet receiverWallet = walletRepository
                 .findByUser(receiver)
                 .orElseThrow(() ->
-                        new RuntimeException("Receiver wallet not found"));
+                        new ResourceNotFoundException("Receiver wallet not found"));
 
         // 5. Determine locking order using wallet ID
         Long firstWalletId;
@@ -95,13 +97,13 @@ public class TransferService {
         Wallet firstWallet = walletRepository
                 .findByIdForUpdate(firstWalletId)
                 .orElseThrow(() ->
-                        new RuntimeException("Wallet not found"));
+                        new ResourceNotFoundException("Wallet not found"));
 
         // 7. Lock second wallet
         Wallet secondWallet = walletRepository
                 .findByIdForUpdate(secondWalletId)
                 .orElseThrow(() ->
-                        new RuntimeException("Wallet not found"));
+                        new ResourceNotFoundException("Wallet not found"));
 
         // 8. Use the LOCKED wallet objects
         if (senderWallet.getId().equals(firstWallet.getId())) {
@@ -114,12 +116,12 @@ public class TransferService {
 
         // 9. Check wallets are active
         if (!senderWallet.isActive()) {
-            throw new RuntimeException(
+            throw new BadRequestException(
                     "Sender wallet is inactive");
         }
 
         if (!receiverWallet.isActive()) {
-            throw new RuntimeException(
+            throw new BadRequestException(
                     "Receiver wallet is inactive");
         }
 
@@ -127,7 +129,7 @@ public class TransferService {
         if (senderWallet.getBalance()
                 .compareTo(request.getAmount()) < 0) {
 
-            throw new RuntimeException(
+            throw new BadRequestException(
                     "Insufficient balance");
         }
 
