@@ -1,5 +1,6 @@
 package com.payforge.controller;
 
+import com.payforge.dto.request.CreateUserRequest;
 import com.payforge.dto.response.AdminStatsResponse;
 import com.payforge.dto.response.AdminTransactionResponse;
 import com.payforge.dto.response.AdminUserDetailsResponse;
@@ -54,5 +55,11 @@ public class AdminController {
                 type,
                 pageable
         );
+    }
+    @PostMapping("/users")
+    public AdminUserResponse createUser(
+            @RequestBody CreateUserRequest request) {
+
+        return adminService.createUser(request);
     }
 }
