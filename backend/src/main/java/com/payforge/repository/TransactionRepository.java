@@ -42,4 +42,7 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long> 
             TransactionType type,
             Pageable pageable
     );
+    Optional<Transaction> findByReferenceId(
+            String referenceId
+    );
 }
