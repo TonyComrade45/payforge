@@ -33,6 +33,9 @@ public class Transaction {
     @Column(nullable = false, unique = true)
     private String referenceId;
 
+    @Column(name = "payment_reference_id")
+    private String paymentReferenceId;
+
     @Column(nullable = false, precision = 19, scale = 2)
     private BigDecimal amount;
 

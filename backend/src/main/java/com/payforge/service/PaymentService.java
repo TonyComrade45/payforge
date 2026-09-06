@@ -13,7 +13,6 @@ import com.payforge.repository.WalletRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.math.BigDecimal;
 import java.util.UUID;
 
 @Service
@@ -154,11 +153,11 @@ public class PaymentService {
         walletRepository.save(lockedCustomerWallet);
         walletRepository.save(lockedMerchantWallet);
 
-        // 10. Generate payment reference
-        String referenceId =
+        // 10. Generate shared payment reference
+        String paymentReferenceId =
                 "PAY-" + UUID.randomUUID();
 
-        // 11. Customer debit transaction
+        // 11. Customer transaction
         Transaction customerTransaction =
                 new Transaction();
 
@@ -172,14 +171,17 @@ public class PaymentService {
                 TransactionStatus.SUCCESS);
 
         customerTransaction.setReferenceId(
-                referenceId);
+                "TXN-" + UUID.randomUUID());
+
+        customerTransaction.setPaymentReferenceId(
+                paymentReferenceId);
 
         customerTransaction.setAmount(
                 request.getAmount());
 
         transactionRepository.save(customerTransaction);
 
-        // 12. Merchant credit transaction
+        // 12. Merchant transaction
         Transaction merchantTransaction =
                 new Transaction();
 
@@ -193,7 +195,10 @@ public class PaymentService {
                 TransactionStatus.SUCCESS);
 
         merchantTransaction.setReferenceId(
-                "PAY-" + UUID.randomUUID());
+                "TXN-" + UUID.randomUUID());
+
+        merchantTransaction.setPaymentReferenceId(
+                paymentReferenceId);
 
         merchantTransaction.setAmount(
                 request.getAmount());
@@ -209,9 +214,10 @@ public class PaymentService {
 
         idempotencyRepository.save(idempotencyRecord);
 
+        // 14. Return payment reference
         return new PaymentResponse(
                 "Payment successful",
-                referenceId,
+                paymentReferenceId,
                 request.getAmount()
         );
     }

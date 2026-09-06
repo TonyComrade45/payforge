@@ -1,0 +1,2 @@
+#!/bin/sh
+exec /home/apiiit123/BackendProject/payforge/.bin/node /usr/share/nodejs/npm/bin/npx-cli.js "$@"
