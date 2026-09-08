@@ -2,6 +2,8 @@ package com.payforge.repository;
 
 import com.payforge.entity.Refund;
 import com.payforge.entity.TransactionStatus;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -33,6 +35,8 @@ public interface RefundRepository
             @Param("status")
             TransactionStatus status
     );
-
-
+    Page<Refund> findByCustomerIdOrderByCreatedAtDesc(
+            Long customerId,
+            Pageable pageable
+    );
 }
