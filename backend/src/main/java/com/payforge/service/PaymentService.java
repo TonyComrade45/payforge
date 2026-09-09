@@ -22,17 +22,20 @@ public class PaymentService {
     private final WalletRepository walletRepository;
     private final TransactionRepository transactionRepository;
     private final IdempotencyRepository idempotencyRepository;
+    private final WebhookService webhookService;
 
     public PaymentService(
             UserRepository userRepository,
             WalletRepository walletRepository,
             TransactionRepository transactionRepository,
-            IdempotencyRepository idempotencyRepository) {
+            IdempotencyRepository idempotencyRepository,
+            WebhookService webhookService) {
 
         this.userRepository = userRepository;
         this.walletRepository = walletRepository;
         this.transactionRepository = transactionRepository;
         this.idempotencyRepository = idempotencyRepository;
+        this.webhookService = webhookService;
     }
 
     @Transactional
@@ -205,7 +208,13 @@ public class PaymentService {
 
         transactionRepository.save(merchantTransaction);
 
-        // 13. Save idempotency record
+        // 13. Create PAYMENT_SUCCESS webhook
+        webhookService.createPaymentWebhook(
+                merchant.getId(),
+                paymentReferenceId
+        );
+
+        // 14. Save idempotency record
         IdempotencyRecord idempotencyRecord =
                 new IdempotencyRecord();
 
@@ -214,7 +223,7 @@ public class PaymentService {
 
         idempotencyRepository.save(idempotencyRecord);
 
-        // 14. Return payment reference
+        // 15. Return payment reference
         return new PaymentResponse(
                 "Payment successful",
                 paymentReferenceId,
