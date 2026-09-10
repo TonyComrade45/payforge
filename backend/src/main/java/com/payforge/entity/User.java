@@ -95,4 +95,10 @@ public class User implements UserDetails {
     public boolean isEnabled() {
         return true;
     }
+
+    @Column(name = "webhook_url")
+    private String webhookUrl;
+
+    @Column(name = "webhook_secret")
+    private String webhookSecret;
 }
