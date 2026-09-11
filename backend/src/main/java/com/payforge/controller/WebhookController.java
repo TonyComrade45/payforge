@@ -4,6 +4,8 @@ import com.payforge.entity.WebhookEvent;
 import com.payforge.service.WebhookService;
 import org.springframework.web.bind.annotation.*;
 
+import java.math.BigDecimal;
+
 @RestController
 @RequestMapping("/api/webhooks")
 public class WebhookController {
@@ -19,11 +21,13 @@ public class WebhookController {
     @PostMapping("/test/payment")
     public WebhookEvent createPaymentWebhook(
             @RequestParam Long merchantId,
-            @RequestParam String paymentReferenceId) {
+            @RequestParam String paymentReferenceId,
+            @RequestParam BigDecimal amount) {
 
         return webhookService.createPaymentWebhook(
                 merchantId,
-                paymentReferenceId
+                paymentReferenceId,
+                amount
         );
     }
 
@@ -31,12 +35,14 @@ public class WebhookController {
     public WebhookEvent createRefundWebhook(
             @RequestParam Long merchantId,
             @RequestParam String paymentReferenceId,
-            @RequestParam String refundReferenceId) {
+            @RequestParam String refundReferenceId,
+            @RequestParam BigDecimal amount) {
 
         return webhookService.createRefundWebhook(
                 merchantId,
                 paymentReferenceId,
-                refundReferenceId
+                refundReferenceId,
+                amount
         );
     }
 }

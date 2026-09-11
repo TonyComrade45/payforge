@@ -3,6 +3,7 @@ package com.payforge.entity;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Entity
@@ -57,6 +58,7 @@ public class WebhookEvent {
     @Column(nullable = false)
     private WebhookStatus status;
 
+
     @Column(nullable = false)
     private int attempts = 0;
 
@@ -69,4 +71,6 @@ public class WebhookEvent {
     protected void onCreate() {
         createdAt = LocalDateTime.now();
     }
+    @Column(nullable = false, precision = 19, scale = 2)
+    private BigDecimal amount;
 }

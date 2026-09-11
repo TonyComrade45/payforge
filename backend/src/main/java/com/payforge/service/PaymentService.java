@@ -211,7 +211,8 @@ public class PaymentService {
         // 13. Create PAYMENT_SUCCESS webhook
         webhookService.createPaymentWebhook(
                 merchant.getId(),
-                paymentReferenceId
+                paymentReferenceId,
+                request.getAmount()
         );
 
         // 14. Save idempotency record
