@@ -9,7 +9,6 @@ import com.payforge.exception.ResourceNotFoundException;
 import com.payforge.repository.UserRepository;
 import com.payforge.repository.WebhookEventRepository;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestClient;
 
 @Service
@@ -19,23 +18,24 @@ public class WebhookDeliveryService {
     private final UserRepository userRepository;
     private final ObjectMapper objectMapper;
     private final RestClient restClient;
+    private final WebhookSignatureService webhookSignatureService;
 
     public WebhookDeliveryService(
             WebhookEventRepository webhookEventRepository,
             UserRepository userRepository,
             ObjectMapper objectMapper,
-            RestClient.Builder restClientBuilder) {
+            RestClient.Builder restClientBuilder,
+            WebhookSignatureService webhookSignatureService) {
 
         this.webhookEventRepository = webhookEventRepository;
         this.userRepository = userRepository;
         this.objectMapper = objectMapper;
         this.restClient = restClientBuilder.build();
+        this.webhookSignatureService = webhookSignatureService;
     }
 
-    @Transactional
     public void deliverWebhook(Long webhookEventId) {
 
-        // 1. Find webhook event
         WebhookEvent event = webhookEventRepository
                 .findById(webhookEventId)
                 .orElseThrow(() ->
@@ -43,7 +43,6 @@ public class WebhookDeliveryService {
                                 "Webhook event not found"
                         ));
 
-        // 2. Find merchant
         User merchant = userRepository
                 .findById(event.getMerchantId())
                 .orElseThrow(() ->
@@ -51,16 +50,20 @@ public class WebhookDeliveryService {
                                 "Merchant not found"
                         ));
 
-        // 3. Check webhook configuration
         if (merchant.getWebhookUrl() == null ||
                 merchant.getWebhookUrl().isBlank()) {
 
-            throw new ResourceNotFoundException(
-                    "Merchant webhook URL is not configured"
-            );
+            markFailed(event);
+            return;
         }
 
-        // 4. Build external webhook payload
+        if (merchant.getWebhookSecret() == null ||
+                merchant.getWebhookSecret().isBlank()) {
+
+            markFailed(event);
+            return;
+        }
+
         WebhookPayload payload = new WebhookPayload(
                 event.getEventId(),
                 event.getEventType(),
@@ -72,16 +75,35 @@ public class WebhookDeliveryService {
 
         try {
 
-            // 5. Send HTTP POST request
+            String payloadJson =
+                    objectMapper.writeValueAsString(payload);
+
+            String signature =
+                    webhookSignatureService.generateSignature(
+                            payloadJson,
+                            merchant.getWebhookSecret()
+                    );
+
             restClient.post()
                     .uri(merchant.getWebhookUrl())
-                    .body(payload)
+                    .header(
+                            "X-PayForge-Signature",
+                            signature
+                    )
+                    .header(
+                            "Content-Type",
+                            "application/json"
+                    )
+                    .body(payloadJson)
                     .retrieve()
                     .toBodilessEntity();
 
-            // 6. Mark delivery successful
             event.setStatus(WebhookStatus.SUCCESS);
-            event.setAttempts(event.getAttempts() + 1);
+
+            event.setAttempts(
+                    event.getAttempts() + 1
+            );
+
             event.setDeliveredAt(
                     java.time.LocalDateTime.now()
             );
@@ -90,13 +112,18 @@ public class WebhookDeliveryService {
 
         } catch (Exception exception) {
 
-            // 7. Mark delivery failed
-            event.setStatus(WebhookStatus.FAILED);
-            event.setAttempts(event.getAttempts() + 1);
-
-            webhookEventRepository.save(event);
-
-            throw exception;
+            markFailed(event);
         }
+    }
+
+    private void markFailed(WebhookEvent event) {
+
+        event.setStatus(WebhookStatus.FAILED);
+
+        event.setAttempts(
+                event.getAttempts() + 1
+        );
+
+        webhookEventRepository.save(event);
     }
 }

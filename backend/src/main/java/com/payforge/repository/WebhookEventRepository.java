@@ -12,21 +12,19 @@ import java.util.Optional;
 public interface WebhookEventRepository
         extends JpaRepository<WebhookEvent, Long> {
 
-    Optional<WebhookEvent> findByEventId(
-            String eventId
-    );
+    Optional<WebhookEvent> findByEventId(String eventId);
 
     List<WebhookEvent> findByMerchantIdOrderByCreatedAtDesc(
-            Long merchantId
-    );
+            Long merchantId);
 
     Page<WebhookEvent> findByMerchantIdOrderByCreatedAtDesc(
             Long merchantId,
-            Pageable pageable
-    );
+            Pageable pageable);
 
     Page<WebhookEvent> findByStatusOrderByCreatedAtAsc(
             WebhookStatus status,
-            Pageable pageable
-    );
+            Pageable pageable);
+
+    List<WebhookEvent> findTop100ByStatusOrderByCreatedAtAsc(
+            WebhookStatus status);
 }
