@@ -19,19 +19,21 @@ public class WebhookDeliveryService {
     private final ObjectMapper objectMapper;
     private final RestClient restClient;
     private final WebhookSignatureService webhookSignatureService;
+    private final WebhookRetryPolicy webhookRetryPolicy;
 
     public WebhookDeliveryService(
             WebhookEventRepository webhookEventRepository,
             UserRepository userRepository,
             ObjectMapper objectMapper,
             RestClient.Builder restClientBuilder,
-            WebhookSignatureService webhookSignatureService) {
+            WebhookSignatureService webhookSignatureService, WebhookRetryPolicy webhookRetryPolicy) {
 
         this.webhookEventRepository = webhookEventRepository;
         this.userRepository = userRepository;
         this.objectMapper = objectMapper;
         this.restClient = restClientBuilder.build();
         this.webhookSignatureService = webhookSignatureService;
+        this.webhookRetryPolicy = webhookRetryPolicy;
     }
 
     public void deliverWebhook(Long webhookEventId) {
@@ -118,12 +120,38 @@ public class WebhookDeliveryService {
 
     private void markFailed(WebhookEvent event) {
 
-        event.setStatus(WebhookStatus.FAILED);
-
         event.setAttempts(
                 event.getAttempts() + 1
         );
 
+        if (event.getAttempts() >= 5) {
+
+            event.setStatus(
+                    WebhookStatus.FAILED
+            );
+
+            event.setNextRetryAt(null);
+
+            webhookEventRepository.save(event);
+
+            return;
+        }
+
+        event.setStatus(
+                WebhookStatus.FAILED
+        );
+
+        int attempts = event.getAttempts();
+
+        java.time.Duration delay =
+                webhookRetryPolicy.getRetryDelay(attempts);
+
+        event.setNextRetryAt(
+                java.time.LocalDateTime.now()
+                        .plus(delay)
+        );
+
         webhookEventRepository.save(event);
     }
+
 }

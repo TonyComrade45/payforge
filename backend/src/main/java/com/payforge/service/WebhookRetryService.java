@@ -6,6 +6,7 @@ import com.payforge.repository.WebhookEventRepository;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
@@ -29,8 +30,9 @@ public class WebhookRetryService {
 
         List<WebhookEvent> events =
                 webhookEventRepository
-                        .findTop100ByStatusOrderByCreatedAtAsc(
-                                WebhookStatus.FAILED
+                        .findTop100ByStatusAndNextRetryAtLessThanEqualOrderByNextRetryAtAsc(
+                                WebhookStatus.FAILED,
+                                LocalDateTime.now()
                         );
 
         for (WebhookEvent event : events) {

@@ -66,7 +66,8 @@ public class WebhookEvent {
     private LocalDateTime createdAt;
 
     private LocalDateTime deliveredAt;
-
+    @Column(name = "next_retry_at")
+    private LocalDateTime nextRetryAt;
     @PrePersist
     protected void onCreate() {
         createdAt = LocalDateTime.now();

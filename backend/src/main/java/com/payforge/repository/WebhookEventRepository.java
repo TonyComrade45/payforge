@@ -6,6 +6,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -25,6 +26,7 @@ public interface WebhookEventRepository
             WebhookStatus status,
             Pageable pageable);
 
-    List<WebhookEvent> findTop100ByStatusOrderByCreatedAtAsc(
-            WebhookStatus status);
+    List<WebhookEvent> findTop100ByStatusAndNextRetryAtLessThanEqualOrderByNextRetryAtAsc(
+            WebhookStatus status,
+            LocalDateTime now);
 }
